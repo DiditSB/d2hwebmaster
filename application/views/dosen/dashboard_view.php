@@ -11,7 +11,7 @@
             if ($dateTime->diff(new DateTime)->format('%R') == '+') {
                 echo "OK";
             }
-            
+            $a='';
             $replace = array('-', ':', ' ');
             $resttimefrom = str_replace($replace, '', '2013-07-03 00:08:00');
             $resttimeto = str_replace($replace, '', '2013-07-03 00:12:00');
