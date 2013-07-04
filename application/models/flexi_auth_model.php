@@ -2307,13 +2307,7 @@ class Flexi_auth_model extends Flexi_auth_lite_model
 		$message = $this->load->view($template, $data, TRUE);
 		
 		$this->email->clear();
-		$this->email->initialize(
-                    array(  'mailtype' => $this->auth->email_settings['email_type']
-//                            'smtp_host' => 'ssl://smtp.gmail.com',
-//                            'smtp_user' => 'didit.sb@gmail.com',
-//                            'smtp_pass' => 'b00kbukub00kITUbuatanSAYA',
-//                            'smtp_port' => 587
-                    ));
+		$this->email->initialize(array('mailtype' => $this->auth->email_settings['email_type']));
 		$this->email->set_newline("\r\n");
 		$this->email->from($this->auth->email_settings['reply_email'], $this->auth->email_settings['site_title']);
 		$this->email->to($email_to);

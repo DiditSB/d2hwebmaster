@@ -191,10 +191,10 @@
          * Custom Problems Table
          * Table to hold uploaded problem by dosen
          */
-        $config['database']['custom']['dosen_problem']['table'] = 'problems';
+        $config['database']['custom']['dosen_problem']['table'] = 'dosen_problems';
 	$config['database']['custom']['dosen_problem']['primary_key'] = 'problem_id';
 	$config['database']['custom']['dosen_problem']['foreign_key'] = 'problem_uacc_fk';
-	$config['database']['custom']['dosen_problem']['join'] = 'problems.problem_uacc_fk';
+	$config['database']['custom']['dosen_problem']['join'] = 'dosen_problems.problem_uacc_fk';
 	$config['database']['custom']['dosen_problem']['custom_columns'] = array(
 		'problem_file_name','problem_orig_name','problem_file_path','problem_active',
                 'problem_date_added','problem_date_start','problem_date_end'
@@ -391,7 +391,7 @@
 	 *   There are then functions within the library to check whether a user is logged in via entering a password, or via a cookie - typically sensitive data should 
 	 *   only be available to users logged in via a password, and less sensitive data to users logged in via 'Remember me' cookies.
 	*/
-	$config['security']['login_session_expire'] = 60*60*3;
+	$config['security']['login_session_expire'] = 60*60*2;
 	
 	/**
 	 * Set whether a users login time is extended when their session token is validated (On every page load).

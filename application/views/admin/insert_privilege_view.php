@@ -10,12 +10,8 @@
     <body>
         <?php $this->load->view('admin/includes/navbar-top'); ?>
         <div class="container">
-            <div class="hero-unit">
-                <h1>d2hwebmaster</h1>
-                <h2>Administrator</h2>
-            </div>
+            <?php $this->load->view('admin/includes/header_title'); ?>
             <div class="row">
-                <?php $this->load->view('admin/includes/header_title'); ?>
                 <div class="span9">
                     <ul class="breadcrumb">
                         <li><a href="<?php echo site_url('admin/index'); ?>"><i class="icon-th"></i> Home</a></li>

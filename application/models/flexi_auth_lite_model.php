@@ -42,6 +42,7 @@ class Flexi_auth_lite_model extends CI_Model
 		$this->lang->load('flexi_auth');
 
 		###++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++###
+		
 		// Sessions and cookies
 		$this->auth->session_name = $this->config->item('sessions','flexi_auth');
 		$this->auth->cookie_name = $this->config->item('cookies','flexi_auth');

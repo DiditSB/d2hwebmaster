@@ -14,19 +14,22 @@ class Index extends CI_Controller {
         $this->load->helper('form');
 
         // Load 'standard' flexi auth library by default.
+        $this->auth = new stdClass;
         $this->load->library('flexi_auth');
 
-        if ($this->flexi_auth->is_logged_in_via_password() && uri_string() != 'index/logout') {
+        if ($this->flexi_auth->is_logged_in() && uri_string() != 'index/logout') {
             // Preserve any flashdata messages so they are passed to the redirect page.
             if ($this->session->flashdata('message')) {
                 $this->session->keep_flashdata('message');
             }
 
             // Redirect logged in admins (For security, admin users should always sign in via Password rather than 'Remember me'.
-            if ($this->flexi_auth->is_admin()) {
-                redirect('admin/dashboard');
+            if ($this->flexi_auth->in_group('Dosen')) {
+                redirect('dosen/dashboard');
+            } else if ($this->flexi_auth->in_group('Mahasiswa')) {
+                redirect('mahasiswa/dashboard');
             } else {
-                redirect('public/dashboard');
+                redirect('guest/dashboard');
             }
         }
 
