@@ -102,119 +102,225 @@ class Dosen_model extends CI_Model {
      * Inserting Problem into 'problems' table
      */
     function insert_problem() {
-            $config1 = array(
-                'upload_path' => '../file/',
+        $this->data['type_upload'] = $this->input->post('insert_problem_type_upload');
+        $this->data['error_upload_file'] = 'Upload again';
+        $this->load->library('form_validation');
+
+        // Set validation rules.
+        $validation_rules = array(
+            array('field' => 'insert_problem_title', 'label' => 'Title', 'rules' => 'required'),
+            array('field' => 'insert_problem_type', 'label' => 'Type', 'rules' => 'required'),
+            array('field' => 'insert_problem_difficulty', 'label' => 'Difficulty', 'rules' => 'required'),
+            array('field' => 'insert_problem_date_start', 'label' => 'Date Start', 'rules' => 'required'),
+            array('field' => 'insert_problem_date_end', 'label' => 'Date End', 'rules' => 'required'),
+            array('field' => 'insert_problem_type_upload', 'label' => 'Type Upload', 'rules' => 'required'),
+            array('field' => 'insert_problem_time_limit', 'label' => 'Time Limit', 'rules' => 'required|integer'),
+            array('field' => 'insert_problem_memory_limit', 'label' => 'Memory Limit', 'rules' => 'required|integer'),
+            array('field' => 'insert_jml_test', 'label' => 'Jumlah Test', 'rules' => 'required')
+        );
+
+        $this->form_validation->set_rules($validation_rules);
+        $this->form_validation->set_error_delimiters('<span class="help-inline">', '</span>');
+
+        // Run the validation.
+        if ($this->form_validation->run()) {
+            $config0 = array(
+                'upload_path' => '../dosen/problems/',
                 'allowed_types' => 'pdf',
                 'max_size' => 5120,
                 'encrypt_name' => TRUE
             );
 
             $this->load->library('upload');
-            $this->upload->initialize($config1);
+            $this->upload->initialize($config0);
 
-            if (!$this->upload->do_upload('insert_file_problem')) {
+            if (!$this->upload->do_upload('insert_problem_file')) {
                 // Displaying error if upload failed
-                $this->data['upload_error'] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
+                $this->data['upload_error_problem'] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
             } else {
-                $config2 = array(
-                    'upload_path' => '../file/',
-                    'allowed_types' => 'pdf',
-                    'max_size' => 5120,
+                $problem_title = $this->input->post('insert_problem_title');
+                $path_program = '../dosen/programs/'.$problem_title.'/';
+                
+                // make folder inside dosen/programs/ use title as a name
+                if(!mkdir($path_program, 0755)) {
+                    // if failed show error message
+                    $this->data['message'] = 'Failed to create folders...';
+                    return FALSE;
+                }
+                
+                $config1 = array(
+                    'upload_path' => $path_program,
+                    'allowed_types' => 'c|C|h|H',
+                    'max_size' => 2048,
                     'encrypt_name' => TRUE
                 );
                 
-                // Get details file1 uploaded data
-                $file1 = $this->upload->data();
+                // Get details uploaded data
+                $data_uploaded_file_problem = $this->upload->data();
                 
                 $this->upload->initialize($config1);
                 
-                if (!$this->upload->do_upload('insert_file_problem')) {
-                    // Delete first file if the second file failed to upload
-                    unlink($file1['full_path']);
+                $problem_programs = $this->input->post('insert_problem_type_upload');
+                for($i = 0; $i < $problem_programs; $i++) {
+                    if (!$this->upload->do_upload('insert_problem_program_'.$i)) {
+                        // Displaying error if upload failed
+                        $this->data["upload_error_program_".$i] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
+                        return FALSE;
+                    } else { 
+                        // Get details uploaded data
+                        $data_uploaded_file_programs[$i] = $this->upload->data();
+                    }
+                }
+                
+                // Delete all uploaded program if failed to upload ....??
+                
+                $config2 = array(
+                    'upload_path' => $path_program,
+                    'allowed_types' => 'txt',
+                    'max_size' => 2048,
+                    'encrypt_name' => TRUE
+                );
+                
+                $problem_testcase_in = $this->input->post('insert_jml_test');
+                $problem_testcase_out = $this->input->post('insert_jml_test');
+                
+                for($i = 0; $i <= $problem_testcase_in; $i++) {
+                    $config2['file_name'] = 't'.$i.'_in';
+                    $this->upload->initialize($config2);
                     
-                    // Displaying error if upload failed
-                    $this->data['upload_error'] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
+                    if (!$this->upload->do_upload('insert_problem_testcase_in_'.$i)) {
+                        // Displaying error if upload failed
+                        $this->data["upload_error_testcase_in_".$i] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
+                        return FALSE;
+                    } else { 
+                        // Get details uploaded data
+                        $data_uploaded_file_testcase_in[$i] = $this->upload->data();
+                        $i++;
+                    }
+                }
+                
+                for($i = 0; $i <= $problem_testcase_out; $i++) {
+                    $config2['file_name'] = 't'.$i.'_out';
+                    $this->upload->initialize($config2);
+                    
+                    if (!$this->upload->do_upload('insert_problem_testcase_out_'.$i)) {
+                        // Displaying error if upload failed
+                        $this->data["upload_error_testcase_out_".$i] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
+                        return FALSE;
+                    } else { 
+                        // Get details uploaded data
+                        $data_uploaded_file_testcase_out[$i] = $this->upload->data();
+                        $i++;
+                    }
+                }
+                
+                // Get user id from session to use in the insert function as a primary key.
+                $user_id = $this->flexi_auth->get_user_id();
+                
+                $arr_str_replace = array('-', ':', ' '); // array for replace
+                $date_start = $this->input->post('insert_problem_date_start');
+                $date_end = $this->input->post('insert_problem_date_end');
+                $date_now = date('Y-m-d H:i:s', time());
+                $problem_date_start = str_replace($arr_str_replace, '', $date_start); // make 2013-03-22 10:21:23 to 20130322102123
+                $problem_date_end = str_replace($arr_str_replace, '', $date_end); // make 2013-03-22 10:21:23 to 20130322102123
+                $now = str_replace($arr_str_replace, '', $date_now); // make 2013-03-22 10:21:23 to 20130322102123
+                
+                if($now >= $problem_date_start && $now <= $problem_date_end) { // compare date time to check problem active or not
+                    $problem_active = 1; 
                 } else {
-               
-                    // Get details file2 uploaded data
-                    $file2 = $this->upload->data();
+                    $problem_active = 0;
+                }
+                
+                $problem_data = array(
+                    'problem_uacc_fk' => $user_id,
+                    'problem_title' => $problem_title,
+                    'problem_type' => $this->input->post('insert_problem_type'),
+                    'problem_difficulty' => $this->input->post('insert_problem_difficulty'),
+                    'problem_file_name' => $data_uploaded_file_problem['file_name'],
+                    'problem_orig_name' => $data_uploaded_file_problem['orig_name'],
+                    'problem_file_path' => $data_uploaded_file_problem['file_path'],
+                    'problem_time_limit' => $this->input->post('insert_problem_time_limit'),
+                    'problem_memory_limit' => $this->input->post('insert_problem_memory_limit'),
+                    'problem_type_upload' => $this->input->post('insert_problem_type_upload'),
+                    'problem_active' => $problem_active,
+                    'problem_date_added' => $date_now,
+                    'problem_date_start' => $date_start,
+                    'problem_date_end' => $date_end,
+                    'problem_view' => ''
+                );
 
-                    $problem_data = array(
-                        'problem_file_name' => $file1['file_name'],
-                        'problem_orig_name' => $file1['orig_name'],
-                        'problem_file_path' => $file1['file_path'],
-                        'problem_active' => '',
-                        'problem_date_added' => date('Y-m-d H:i:s', time()),
-                        'problem_date_start' => '',
-                        'problem_date_end' => ''
-                    );
-
-                    $response = $this->flexi_auth->insert_custom_user_data(2, $problem_data);
-
+                $response = $this->db->insert('dosen_problems', $problem_data);
+                if(!$response) {
                     // Save any public status or error messages (Whilst suppressing any admin messages) to CI's flash session data.
-                    $this->session->set_flashdata('message', $this->flexi_auth->get_messages());
-
+                    $this->session->set_flashdata('message', 'Unable to insert problem');
+                    
                     // Redirect user.
                     ($response) ? redirect('dosen') : redirect('dosen/insert_problem');
                 }
+                
+                $insert_id = $this->db->insert_id();
+                foreach($data_uploaded_file_programs as $row) {
+                    $arr_program = array(
+                        'program_problems_fk' => $insert_id,
+                        'program_file_name' => $row['file_name'],
+                        'program_orig_file_name' => $row['orig_name'],
+                        'program_file_path' => $row['file_path']
+                    );
+                    
+                    $response = $this->db->insert('dosen_problem_programs', $arr_program);
+                    if(!$response) {
+                        // Save any public status or error messages (Whilst suppressing any admin messages) to CI's flash session data.
+                        $this->session->set_flashdata('message', 'Unable to insert problem');
+
+                        // Redirect user.
+                        redirect('dosen/insert_problem');
+                    }
+                }
+                
+                foreach($data_uploaded_file_testcase_in as $row) {
+                    $arr_program = array(
+                        'program_problems_fk' => $insert_id,
+                        'program_file_name' => $row['file_name'],
+                        'program_orig_file_name' => $row['orig_name'],
+                        'program_file_path' => $row['file_path']
+                    );
+                    
+                    $response = $this->db->insert('dosen_problem_programs', $arr_program);
+                    if(!$response) {
+                        // Save any public status or error messages (Whilst suppressing any admin messages) to CI's flash session data.
+                        $this->session->set_flashdata('message', 'Unable to insert problem');
+
+                        // Redirect user.
+                        redirect('dosen/insert_problem');
+                    }
+                }
+                
+                foreach($data_uploaded_file_testcase_out as $row) {
+                    $arr_program = array(
+                        'program_problems_fk' => $insert_id,
+                        'program_file_name' => $row['file_name'],
+                        'program_orig_file_name' => $row['orig_name'],
+                        'program_file_path' => $row['file_path']
+                    );
+                    
+                    $response = $this->db->insert('dosen_problem_programs', $arr_program);
+                    if(!$response) {
+                        // Save any public status or error messages (Whilst suppressing any admin messages) to CI's flash session data.
+                        $this->session->set_flashdata('message', 'Unable to insert problem');
+
+                        // Redirect user.
+                        redirect('dosen/insert_problem');
+                    }
+                }
+                
+                redirect('dosen');
             }
-//        $this->load->library('form_validation');
-//
-//        // Set validation rules.
-//        $validation_rules = array(
-//            array('field' => 'insert_date_start', 'label' => 'Date Start', 'rules' => 'required'),
-//            array('field' => 'insert_date_end', 'label' => 'Date End', 'rules' => 'required')
-//        );
-//
-//        $this->form_validation->set_rules($validation_rules);
-//        $this->form_validation->set_error_delimiters('<span class="help-inline">', '</span>');
-//
-//        // Run the validation.
-//        if ($this->form_validation->run()) {
-//            $config = array(
-//                'upload_path' => '../file/',
-//                'allowed_types' => 'pdf',
-//                'max_size' => 5120,
-//                'encrypt_name' => TRUE
-//            );
-//
-//            $this->load->library('upload');
-//            $this->upload->initialize($config);
-//
-//            if (!$this->upload->do_upload('insert_file_problem')) {
-//                // Displaying error if upload failed
-//                $this->data['upload_error'] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
-//            } else {
-//                // Get details uploaded data
-//                $data_uploaded = $this->upload->data();
-//
-//                // Get user id from session to use in the insert function as a primary key.
-//                $user_id = $this->flexi_auth->get_user_id();
-//
-//                $problem_data = array(
-//                    'problem_file_name' => $data_uploaded['file_name'],
-//                    'problem_orig_name' => $data_uploaded['orig_name'],
-//                    'problem_file_path' => $data_uploaded['file_path'],
-//                    'problem_active' => '',
-//                    'problem_date_added' => date('Y-m-d H:i:s', time()),
-//                    'problem_date_start' => $this->input->post('insert_date_start'),
-//                    'problem_date_end' => $this->input->post('insert_date_end')
-//                );
-//
-//                $response = $this->flexi_auth->insert_custom_user_data($user_id, $problem_data);
-//
-//                // Save any public status or error messages (Whilst suppressing any admin messages) to CI's flash session data.
-//                $this->session->set_flashdata('message', $this->flexi_auth->get_messages());
-//
-//                // Redirect user.
-//                ($response) ? redirect('dosen') : redirect('dosen/insert_problem');
-//            }
-//        } else {
-//            // Set validation errors.
-//            $this->data['message'] = validation_errors('<p class="alert alert-info">', '</p>');
-//
-//            return FALSE;
-//        }
+        } else {
+            // Set validation errors.
+            $this->data['message'] = validation_errors('<p class="alert alert-info">', '</p>');
+
+            return FALSE;
+        }
     }
 
 }

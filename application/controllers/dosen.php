@@ -62,9 +62,10 @@ class Dosen extends CI_Controller {
      * Insert new problem
      */
     function insert_problem() {
+        $this->load->helper('file');
         if($this->flexi_auth->is_privileged('Insert Problem')) {
             // If 'Add Problem' form has been submitted, then insert the new problem details to the problems table.
-            if($this->input->post('add_problem')) {
+            if($this->input->post('insert_problem')) {
                 $this->load->model('dosen_model');
                 $this->dosen_model->insert_problem();
             }
