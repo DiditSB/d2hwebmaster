@@ -48,13 +48,43 @@ class Dosen extends CI_Controller {
         $this->data['message'] = $this->session->flashdata('message');
         $this->load->view('dosen/dashboard_view', $this->data);
     }
+    
+    function deactivate_problem($title, $problem_id) {
+        $this->load->model('dosen_model');
+        
+        $this->dosen_model->deactivate_problem($type, $id);
+    }
+    
+    function detail($type = FALSE, $id = FALSE) {
+        // Set any returned status/error messages.
+        $this->data['message'] = (! isset($this->data['message'])) ? $this->session->flashdata('message') : $this->data['message'];
+        
+        $this->load->view('dosen/detail_view', $this->data);
+        
+    }
+    
+    function download($type = FALSE, $name = FALSE) {
+        if($type && $name) {
+            $this->load->helper('download');
+            $this->load->model('dosen_model');
+            $this->dosen_model->download($type, $name);
+        }
+    }
+    
+    function get_detail_problem($type, $id) {
+        $this->load->model('dosen_model');
+        
+        $this->dosen_model->detail($type, $id);
+        
+        $this->load->view('dosen/detail_problem_view', $this->data);
+    }
 
     /**
      * index
      * Forwards to the admin dashboard.
      */
     function index() {
-        redirect('dosen/dashboard');
+        redirect('dosen/list_problems');
     }
     
     /**
@@ -63,6 +93,7 @@ class Dosen extends CI_Controller {
      */
     function insert_problem() {
         $this->load->helper('file');
+        
         if($this->flexi_auth->is_privileged('Insert Problem')) {
             // If 'Add Problem' form has been submitted, then insert the new problem details to the problems table.
             if($this->input->post('insert_problem')) {
@@ -77,7 +108,7 @@ class Dosen extends CI_Controller {
         $this->load->view('dosen/insert_problem_view', $this->data);
     }
     
-    function list_problems($status = FALSE) {
+    function list_problems() {
         $this->load->model('dosen_model');
 
         // Check user has privileges to view user accounts, else display a message to notify the user they do not have valid privileges.
@@ -87,7 +118,7 @@ class Dosen extends CI_Controller {
         }
 
         // If 'Admin Search User' form has been submitted, this example will lookup the users email address and first and last name.
-        if ($this->input->post('search_problems') && $this->input->post('search_query')) {
+        if ($this->input->post('search_problem') && $this->input->post('search_query')) {
             // Convert uri ' ' to '-' spacing to prevent '20%'.
             // Note: Native php functions like urlencode() could be used, but by default, CodeIgniter disallows '+' characters.
             $search_query = str_replace(' ', '-', $this->input->post('search_query'));
@@ -100,21 +131,24 @@ class Dosen extends CI_Controller {
         else if ($this->input->post('update_problems') && $this->flexi_auth->is_privileged('Update Users')) {
             $this->dosen_model->update_user_accounts();
         }
-        
-        // The view associated with this controller method is used by multiple methods, therefore set a page title.
-        $this->data['page_title'] = ($status == 'inactive') ? 'Inactive Problems' : 'Active Problems';
-        $this->data['status'] = ($status == 'inactive') ? 'inactive_problems' : 'active_problems'; // Indicate page function.
-        // Get an array of all active/inactive user accounts, using the sql select and where statements defined below.
-        // Note: The columns defined using the 'db_column()' functions are native table columns to the auth library. 
-        // Read more on 'db_column()' functions in the quick help section near the top of this controller.
 
+        // update problem where must be publish or not
+        $this->dosen_model->update_status_problem();
+        
         // Get user account data for all users. 
         // If a search has been performed, then filter the returned users.
-        $this->dosen_model->get_problems($status);
+        $this->dosen_model->get_problems();
 
         // Set any returned status/error messages.
         $this->data['message'] = (!isset($this->data['message'])) ? $this->session->flashdata('message') : $this->data['message'];
 
         $this->load->view('dosen/manage_problems_view', $this->data);
+    }
+    
+    function problem_typeahead() {
+        $this->load->model('dosen_model');
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode($this->dosen_model->problem_typeahead()));
     }
 }

@@ -1,21 +1,3 @@
-<!--<html>
-    <head>
-        <title>Insert Problem | d2hwebmaster</title>
-    </head>
-    <body>
-        <?php if(!empty($message)) { echo $message; } ?>
-
-        <?php echo form_open_multipart('dosen/insert_problem'); ?>
-
-        <input type="file" name="insert_file_problem" size="20" />
-        <?php if(!empty($upload_error)) { echo $upload_error; } ?>
-        <br /><br />
-
-        <input type="submit" name="add_problem" value="Add Problem" />
-
-    </form>
-</body>
-</html>-->
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -31,19 +13,16 @@
         <div class="container">
             <?php $this->load->view('dosen/includes/header_title'); ?>
             <div class="row">
-                <?php $this->load->view('dosen/includes/global_users_navbar_left'); ?>
+                <?php $this->load->view('dosen/includes/user_activity_navbar_left'); ?>
                 <div class="span9">
                     <ul class="breadcrumb">
-                        <li><a href="<?php echo site_url('dosen/dashboard'); ?>"><i class="icon-th"></i> Home</a></li>
+                        <li><a href="<?php echo site_url('dosen/list_problems'); ?>"><i class="icon-th"></i> List all problems</a></li>
                         <li>
-                            <span class="divider">\</span><a href="<?php echo site_url('admin/manage_user_groups'); ?>">Manage User Groups</a>
-                        </li>
-                        <li>
-                            <span class="divider">\</span><a href="<?php echo current_url(); ?>">Insert User Group</a>
+                            <span class="divider">\</span><a href="<?php echo current_url(); ?>">Insert Problem</a>
                         </li>
                     </ul>
                     <div class="namespace-indent">
-                        <h3>Insert Privilege</h3>
+                        <h3>Insert New Problem</h3>
                         <div class="element" style="background-color: white">
                             <?php echo form_open_multipart('dosen/insert_problem', array('class' => 'form-horizontal'));
                             $form_error = array();

@@ -180,7 +180,7 @@ class Index extends CI_Controller {
         if($this->input->post('file_upload')) {
             $config = array(
                 'upload_path' => '../file/',
-                'allowed_types' => 'pdf',
+                'allowed_types' => 'pdf|c',
                 'max_size' => 5120,
                 'encrypt_name' => TRUE
             );

@@ -95,6 +95,15 @@ class MY_Form_validation extends CI_Form_validation
 		}
         return TRUE;
     }
+    
+    protected function title_available($title) {
+        $query = $this->CI->db->get_where('dosen_problems', array('problem_title' => $title));
+        if($query->num_rows() > 0) {
+            $this->CI->form_validation->set_message('title_available', "A problem with this title already exists.");
+            return FALSE;
+        }
+        return TRUE;
+    }
 }
 
 /* End of file MY_Form_validation.php */
