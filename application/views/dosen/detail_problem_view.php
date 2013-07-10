@@ -1,5 +1,4 @@
 
-                <div class="span9">
                     <ul class="breadcrumb">
                         <li><a href="<?php echo site_url('dosen/list_problems'); ?>"><i class="icon-th"></i> List all problems</a></li>
                         <li>
@@ -71,5 +70,4 @@
                             </table>
                         </div>
                     </div>
-                </div>
             

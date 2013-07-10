@@ -17,7 +17,9 @@ class Dosen_model extends CI_Model {
             // update
             // update inactive problem
             $sql_select = array(
-                'problem_date_end'
+                'problem_date_start',
+                'problem_date_end',
+                'problem_active'
             );
             $sql_where['problem_id'] = $id;
             $this->flexi_auth->sql_select($sql_select);
@@ -26,7 +28,7 @@ class Dosen_model extends CI_Model {
             $this->db->flush_cache();
             foreach($problems as $problem) {
                 
-                $this->update_status_problem_by_id($problem['problem_date_end'], $id);
+                $this->update_status_problem_by_id($problem['problem_date_start'], $problem['problem_date_end'], $problem['problem_active'], $id);
             }
             
             $this->db->select('*');
@@ -100,6 +102,8 @@ class Dosen_model extends CI_Model {
     
     function update_status_problem() {
         $this->db->start_cache();
+        $this->db->where('problem_date_start !=', '0000-00-00 00:00:00');
+        $this->db->where('problem_date_end !=', '0000-00-00 00:00:00');
         $this->db->where('problem_date_start <=', date('Y-m-d H:i:s', time()));
         $this->db->where('problem_date_end >=', date('Y-m-d H:i:s', time()));
         $this->db->update('dosen_problems', array('problem_active' => 1));
@@ -107,22 +111,30 @@ class Dosen_model extends CI_Model {
         $this->db->flush_cache();
         
         $this->db->start_cache();
+        $this->db->where('problem_date_end !=', '0000-00-00 00:00:00');
         $this->db->where('problem_date_end <=', date('Y-m-d H:i:s', time()));
         $this->db->update('dosen_problems', array('problem_active' => 2));
         $this->db->stop_cache();
         $this->db->flush_cache();
     }
     
-    function update_status_problem_by_id($date_end, $problem_id) {
-        $arr_str_replace = array('-', ':', ' '); // array for replace
-        $date_now = date('Y-m-d H:i:s', time());
-        $problem_date_end = str_replace($arr_str_replace, '', $date_end); // make 2013-03-22 10:21:23 to 20130322102123
-        $now = str_replace($arr_str_replace, '', $date_now); // make 2013-03-22 10:21:23 to 20130322102123
+    function update_status_problem_by_id($date_start, $date_end, $problem_active, $problem_id) {
+        if($date_start != '0000-00-00 00:00:00' && $date_end != '0000-00-00 00:00:00') {
+            $arr_str_replace = array('-', ':', ' '); // array for replace
+            $date_now = date('Y-m-d H:i:s', time());
+            $problem_date_start = str_replace($arr_str_replace, '', $date_start);
+            $problem_date_end = str_replace($arr_str_replace, '', $date_end); // make 2013-03-22 10:21:23 to 20130322102123
+            $now = str_replace($arr_str_replace, '', $date_now); // make 2013-03-22 10:21:23 to 20130322102123
 
-        if($problem_date_end < $now) {
-            $this->db->where('problem_id', $problem_id);
-            $this->db->update('dosen_problems', array('problem_active' => 2));
-            $this->db->flush_cache();
+            if($problem_date_end < $now && $problem_active == 1) {
+                $this->db->where('problem_id', $problem_id);
+                $this->db->update('dosen_problems', array('problem_active' => 2));
+                $this->db->flush_cache();
+            } else if($now >= $problem_date_start && $now <= $problem_date_end && $problem_active == 0) {
+                $this->db->where('problem_id', $problem_id);
+                $this->db->update('dosen_problems', array('problem_active' => 1));
+                $this->db->flush_cache();
+            }
         }
     }
             
@@ -130,13 +142,6 @@ class Dosen_model extends CI_Model {
         // Get user id from session to use in the insert function as a primary key.
         $user_id = $this->flexi_auth->get_user_id();
         
-        // Select user data to be displayed.
-        $sql_select = array(
-            'problem_id',
-            'problem_title',
-            'problem_date_added',
-            'problem_active'
-        );
         $this->db->select('problem_id, problem_title, problem_orig_name, problem_date_added, problem_active');
         $this->db->where('problem_uacc_fk', $user_id);
 
@@ -211,6 +216,20 @@ class Dosen_model extends CI_Model {
         $this->data['pagination']['links'] = $this->pagination->create_links();
         $this->data['pagination']['total_users'] = $total_users;
     }
+    
+    function insert_nilai($id_problem) {
+        $this->db->select('uacc_id');
+        $query = $this->db->get_where('user_accounts', array('uacc_group_fk' => 2));
+        
+        foreach($query->result() as $mhs) {
+            $data = array(
+                'nilai_uacc_fk' => $mhs->uacc_id,
+                'nilai_problem_fk' => $id_problem
+            );
+            
+            $this->db->insert('mhs_nilai', $data);
+        }
+    }
 
     /**
      * Insert Problem Model
@@ -255,9 +274,10 @@ class Dosen_model extends CI_Model {
             } else {
                 $problem_title = $this->input->post('insert_problem_title');
                 $path_program = '../dosen/programs/'.$problem_title.'/';
+                $mhs_path_program = '../mahasiswa/'.$problem_title.'/';
                 
                 // make folder inside dosen/programs/ use title as a name
-                if(!mkdir($path_program, 0755)) {
+                if(!mkdir($path_program, 0755) && !mkdir($mhs_path_program, 0755)) {
                     // if failed show error message
                     $this->data['message'] = 'Failed to create folders...';
                     return FALSE;
@@ -431,6 +451,8 @@ class Dosen_model extends CI_Model {
                         redirect('dosen/insert_problem');
                     }
                 }
+                
+                $this->insert_nilai($insert_id);
                 
                 $this->session->set_flashdata('message', 'Success to add the problem');
                 
