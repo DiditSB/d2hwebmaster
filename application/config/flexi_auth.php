@@ -627,7 +627,7 @@
 	###++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++###
 	
 	// Site title shown as 'from' header on emails.
-	$config['email']['site_title'] = "d2hwebmaster.com";
+	$config['email']['site_title'] = "d2hwebmaster";
 	
 	// Reply email shown as 'from' header on emails.
 	$config['email']['reply_email'] = "didit.sb@gmail.com";

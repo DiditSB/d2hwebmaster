@@ -40,7 +40,7 @@
                                 $problem_path = "114.79.61.103/dosen/problems/";
                                 $problem_path = urlencode($problem_path);
                             ?>
-                            <iframe src="http://docs.google.com/viewer?url=<?php echo $problem_path.$problem->problem_file_name; ?>&embedded=true" width="825" height="780" style="border: none;"></iframe>
+                            <iframe src="http://docs.google.com/viewer?url=<?php echo urlencode("http://www.d2hwebmaster.hol.es/dosen/problems/".$problem->problem_file_name);; ?>&embedded=true" width="825" height="780" style="border: none;"></iframe>
                             <table class="table" style="border-width: 0">
                                 <tr>
                                     <td>Download Problem</td>

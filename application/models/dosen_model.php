@@ -272,12 +272,14 @@ class Dosen_model extends CI_Model {
                 // Displaying error if upload failed
                 $this->data['upload_error_problem'] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
             } else {
+                
                 $problem_title = $this->input->post('insert_problem_title');
                 $path_program = '../dosen/programs/'.$problem_title.'/';
                 $mhs_path_program = '../mahasiswa/'.$problem_title.'/';
                 
                 // make folder inside dosen/programs/ use title as a name
-                if(!mkdir($path_program, 0755) && !mkdir($mhs_path_program, 0755)) {
+                mkdir($mhs_path_program, 0755);
+                if(!mkdir($path_program, 0755)) {
                     // if failed show error message
                     $this->data['message'] = 'Failed to create folders...';
                     return FALSE;
@@ -286,12 +288,23 @@ class Dosen_model extends CI_Model {
                 // Get details uploaded data
                 $data_uploaded_file_problem = $this->upload->data();
                 
+                $this->load->library('ftp');
+            
+                $ftp['hostname'] = '31.170.165.235';
+                $ftp['username'] = 'u305438951';
+                $ftp['password'] = 's3marang';
+                $ftp['port']     = 21;
+                $ftp['debug']    = TRUE;
+
+                $this->ftp->connect($ftp);
+                $this->ftp->upload($data_uploaded_file_problem['full_path'], '/public_html/dosen/problems/'.$data_uploaded_file_problem['file_name'], 'auto', 0644);
+                $this->ftp->close();
+                
                 $problem_programs = $this->input->post('insert_problem_type_upload');
                 
                 $config1 = array(
                     'upload_path' => $path_program,
-                    'max_size' => 2048,
-                    'encrypt_name' => TRUE
+                    'max_size' => 2048
                 );
                 
                 if($problem_programs == 1) {
@@ -318,8 +331,7 @@ class Dosen_model extends CI_Model {
                 $config2 = array(
                     'upload_path' => $path_program,
                     'allowed_types' => 'txt',
-                    'max_size' => 2048,
-                    'encrypt_name' => TRUE
+                    'max_size' => 2048
                 );
                 
                 $problem_testcase = $this->input->post('insert_jml_test');
@@ -332,7 +344,7 @@ class Dosen_model extends CI_Model {
                         // Displaying error if upload failed
                         $this->data["upload_error_testcase_in_".$i] = $this->upload->display_errors('<p class="alert alert-info">', '</p>');
                         return FALSE;
-                    } else { 
+                    } else {
                         // Get details uploaded data
                         $data_uploaded_file_testcase_in[$i] = $this->upload->data();
                     }

@@ -179,19 +179,48 @@ class Index extends CI_Controller {
         $this->data['data'] = '';
         if($this->input->post('file_upload')) {
             $config = array(
-                'upload_path' => '../file/',
-                'allowed_types' => 'pdf|c',
-                'max_size' => 5120,
-                'encrypt_name' => TRUE
+                'upload_path' => '../mahasiswa/',
+                'allowed_types' => 'c',
+                'max_size' => 2048,
+                'file_name' => 'm1p2u1'
             );
             $this->load->library('upload', $config);
-            if(!$this->upload->do_upload()) {
+            if(!$this->upload->do_upload('userfile')) {
                 $this->data['error'] = $this->upload->display_errors();
 
                 $this->load->view('upload_form', $this->data);
             } else {
                 $this->data['data'] = $this->upload->data();
-
+                $outputtext = '';
+                $cmd = str_replace('/', '\\', 'gcc -Wall -lm '.$this->data['data']['full_path'].' -o '.$this->data['data']['file_path'].$this->data['data']['raw_name'].'.exe 2>&1');
+                $output = shell_exec($cmd);
+//                echo $output;
+//                return FALSE;
+                if(is_null($output))
+                {
+                    $outputtext='<p>Compiled Successfully.';
+                    $outputtext .= '<br/><br/>Output:<br/><hr><br/>';
+                    $final_out = shell_exec($this->data['data']['file_path'].$this->data['data']['raw_name'].'.exe < c:\xampp\htdocs\dosen\programs\t0_in.txt > '.$this->data['data']['file_path'].'output.txt');
+                    $a = file($this->data['data']['file_path'].'output.txt', FILE_IGNORE_NEW_LINES);
+                    $b = file('c:/xampp/htdocs/dosen/programs/t0_out.txt', FILE_IGNORE_NEW_LINES);
+                    $lines_a = count($a);
+                    $lines_b = count($b);
+                    $loop = $lines_a < $lines_b ? $lines_a : $lines_b;
+                    $total = 0;
+                    for($i = 0; $i < $loop; $i++) {
+                        if($a[$i] == $b[$i]) {
+                            $total += 4;
+                        } else {
+                            $total += 3;
+                        }
+                    }
+                    $nilai = $total / ($lines_b * 4) * 100;
+                    $outputtext.= $nilai;
+                } else {
+                    $outputtext .= "$output";
+                }
+                
+                $this->data['output'] = $outputtext;
                 $this->load->view('upload_form', $this->data);
             }
         } else {
